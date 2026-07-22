@@ -173,10 +173,24 @@ For **Linux** users:
 Users can also launcher `SourceGit` from commandline. Usage:
 
 ```
-<SOURCEGIT_EXEC> <DIR>                       // Open repository in existing `SourceGit` instance or a new one
+<SOURCEGIT_EXEC> <DIR>                       // Open repository in existing `SourceGit` instance or a new one (CLI exits immediately, GUI launches in background)
 <SOURCEGIT_EXEC> --history <FILE_OR_DIR>     // Launch `SourceGit` to see the history of a file or dir
-<SOURCEGIT_EXEC> --blame <FILE_PATH>         // Launch `SourceGit` to blame a file (HEAD version only) 
+<SOURCEGIT_EXEC> --blame <FILE_PATH>         // Launch `SourceGit` to blame a file (HEAD version only)
 ```
+
+When launched from a terminal with a single positional `<DIR>`, the SourceGit process
+behaves as a CLI shim: it sends the path to an already-running instance through the
+existing IPC channel, or — when no GUI is running — spawns a detached GUI child and
+exits within ~1 second. This means commands like
+
+```shell
+sourcegit /path/to/repo
+```
+
+from a terminal will return control to the shell promptly instead of blocking until
+the GUI window is dismissed. The `<DIR>` must point at an existing directory; file
+paths and non-existent paths fall through to the interactive launcher (same
+behavior as invoking with no arguments).
 
 ## OpenAI
 
