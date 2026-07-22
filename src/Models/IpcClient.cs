@@ -9,6 +9,20 @@ namespace SourceGit.Models
     {
         private const string PipeName = "SourceGitIPCChannel";
 
+        public static bool IsAnotherInstanceRunning()
+        {
+            var lockPath = Path.Combine(Native.OS.DataDir, "process.lock");
+            try
+            {
+                using var probe = File.Open(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                return false;
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
         public static bool TrySendPath(string path, int timeoutMs = 1500)
         {
             if (string.IsNullOrEmpty(path))

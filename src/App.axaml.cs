@@ -40,6 +40,8 @@ namespace SourceGit
                     Environment.Exit(exitTodo);
                 else if (TryLaunchAsRebaseMessageEditor(args, out int exitMessage))
                     Environment.Exit(exitMessage);
+                else if (TryLaunchAsCliShim(args))
+                    Environment.Exit(0);
                 else
                     BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             }
@@ -456,14 +458,7 @@ namespace SourceGit
             _ipcChannel = new Models.IpcChannel();
             if (!_ipcChannel.IsFirstInstance)
             {
-                var arg = desktop.Args is { Length: > 0 } ? desktop.Args[0] : string.Empty;
-                if (!string.IsNullOrEmpty(arg))
-                {
-                    arg = arg.Replace('\\', '/').TrimEnd('/').Trim('\"').Trim();
-                    if (arg.Length > 0 && !Path.IsPathFullyQualified(arg))
-                        arg = Path.GetFullPath(arg);
-                }
-
+                var arg = NormalizeRepoArg(desktop.Args);
                 _ipcChannel.SendToFirstInstance(arg);
                 Environment.Exit(0);
                 return;
@@ -475,8 +470,15 @@ namespace SourceGit
             string startupRepo = null;
             if (desktop.Args is { Length: 1 })
             {
-                var arg = desktop.Args[0].Replace('\\', '/').TrimEnd('/').Trim('\"').Trim();
-                if (Directory.Exists(arg))
+                var arg = NormalizeRepoArg(desktop.Args);
+                if (!string.IsNullOrEmpty(arg) && Directory.Exists(arg))
+                    startupRepo = arg;
+            }
+            else if (desktop.Args is { Length: 2 } &&
+                     desktop.Args[0].Equals("--cli-launch", StringComparison.Ordinal))
+            {
+                var arg = NormalizeRepoArg(new[] { desktop.Args[1] });
+                if (!string.IsNullOrEmpty(arg) && Directory.Exists(arg))
                     startupRepo = arg;
             }
 
@@ -518,6 +520,43 @@ namespace SourceGit
             if (pref.ShouldCheck4UpdateOnStartup())
                 Check4Update();
 #endif
+        }
+
+        private static bool TryLaunchAsCliShim(string[] args)
+        {
+            if (args.Length != 1)
+                return false;
+
+            var arg = NormalizeRepoArg(args);
+            if (string.IsNullOrEmpty(arg) || !Directory.Exists(arg))
+                return false;
+
+            if (Models.IpcClient.IsAnotherInstanceRunning())
+            {
+                Models.IpcClient.TrySendPath(arg);
+            }
+            else
+            {
+                Native.OS.LaunchDetachedGui(new[] { "--cli-launch", arg });
+            }
+
+            return true;
+        }
+
+        private static string NormalizeRepoArg(string[] args)
+        {
+            var raw = args is { Length: > 0 } ? args[0] : string.Empty;
+            if (string.IsNullOrEmpty(raw))
+                return string.Empty;
+
+            var normalized = raw.Replace('\\', '/').TrimEnd('/').Trim('\"').Trim();
+            if (normalized.Length == 0)
+                return string.Empty;
+
+            if (!Path.IsPathFullyQualified(normalized))
+                normalized = Path.GetFullPath(normalized);
+
+            return normalized;
         }
         #endregion
 
