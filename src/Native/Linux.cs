@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Versioning;
 
 using Avalonia;
@@ -153,6 +155,33 @@ namespace SourceGit.Native
                     Models.Notification.Send("", $"Failed to open: {file}", true);
 
                 proc.Close();
+            }
+        }
+
+        [UnconditionalSuppressMessage("SingleFile", "IL3000", Justification = "Assembly.Location is a dev-mode fallback only used when ProcessPath is empty.")]
+        public void LaunchDetachedGui(string[] args)
+        {
+            var exe = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exe))
+                exe = Assembly.GetExecutingAssembly().Location; // dev-mode fallback, empty under NativeAOT
+            if (string.IsNullOrEmpty(exe) || !File.Exists(exe))
+                return;
+
+            var startInfo = new ProcessStartInfo(exe);
+            foreach (var a in args)
+                startInfo.ArgumentList.Add(a);
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardInput = true;
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
+
+            try
+            {
+                Process.Start(startInfo);
+            }
+            catch (Exception e)
+            {
+                Models.Notification.Send("", $"Failed to relaunch SourceGit. Reason: {e.Message}", true);
             }
         }
 

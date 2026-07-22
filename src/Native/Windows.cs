@@ -188,6 +188,28 @@ namespace SourceGit.Native
             });
         }
 
+        public void LaunchDetachedGui(string[] args)
+        {
+            var exe = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exe) || !File.Exists(exe))
+                return;
+
+            var startInfo = new ProcessStartInfo(exe);
+            foreach (var a in args)
+                startInfo.ArgumentList.Add(a);
+            startInfo.UseShellExecute = true;
+            startInfo.CreateNoWindow = false;
+
+            try
+            {
+                Process.Start(startInfo);
+            }
+            catch (Exception e)
+            {
+                Models.Notification.Send("", $"Failed to relaunch SourceGit. Reason: {e.Message}", true);
+            }
+        }
+
         public void OpenWithDefaultEditor(string file)
         {
             var info = new FileInfo(file);

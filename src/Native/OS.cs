@@ -28,6 +28,7 @@ namespace SourceGit.Native
             void OpenInFileManager(string path);
             void OpenBrowser(string url);
             void OpenWithDefaultEditor(string file);
+            void LaunchDetachedGui(string[] args);
         }
 
         public static string DataDir
@@ -273,6 +274,11 @@ namespace SourceGit.Native
         public static void OpenWithDefaultEditor(string file)
         {
             _backend.OpenWithDefaultEditor(file);
+        }
+
+        public static void LaunchDetachedGui(string[] args)
+        {
+            _backend.LaunchDetachedGui(args);
         }
 
         public static string GetAbsPath(string root, string sub)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
@@ -112,6 +113,67 @@ namespace SourceGit.Native
         public void OpenWithDefaultEditor(string file)
         {
             Process.Start("open", file.Quoted());
+        }
+
+        [UnconditionalSuppressMessage("SingleFile", "IL3000", Justification = "Assembly.Location is a dev-mode fallback only used when ProcessPath is empty.")]
+        public void LaunchDetachedGui(string[] args)
+        {
+            var appPath = LocateAppBundle();
+            if (!string.IsNullOrEmpty(appPath) && File.Exists(appPath))
+            {
+                var psi = new ProcessStartInfo("open");
+                psi.ArgumentList.Add("-a");
+                psi.ArgumentList.Add(appPath);
+                psi.ArgumentList.Add("--args");
+                foreach (var a in args)
+                    psi.ArgumentList.Add(a);
+                psi.UseShellExecute = false;
+                psi.RedirectStandardOutput = true;
+                psi.RedirectStandardError = true;
+                try
+                {
+                    using var proc = Process.Start(psi);
+                    proc?.WaitForExit(200);
+                    return;
+                }
+                catch
+                {
+                    // fall through to direct spawn
+                }
+            }
+
+            var exe = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exe))
+                exe = Assembly.GetExecutingAssembly().Location; // dev-mode fallback, empty under NativeAOT
+            var direct = new ProcessStartInfo(exe);
+            foreach (var a in args)
+                direct.ArgumentList.Add(a);
+            direct.UseShellExecute = false;
+            direct.RedirectStandardInput = true;
+            direct.RedirectStandardOutput = true;
+            direct.RedirectStandardError = true;
+            Process.Start(direct);
+        }
+
+        private static string LocateAppBundle()
+        {
+            var exe = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exe))
+                return string.Empty;
+
+            var binDir = Path.GetDirectoryName(exe);
+            if (string.IsNullOrEmpty(binDir))
+                return string.Empty;
+
+            var contentsDir = Path.GetDirectoryName(binDir);
+            if (string.IsNullOrEmpty(contentsDir))
+                return string.Empty;
+
+            var appPath = contentsDir + ".app";
+            if (Directory.Exists(appPath))
+                return appPath;
+
+            return string.Empty;
         }
     }
 
