@@ -192,6 +192,21 @@ the GUI window is dismissed. The `<DIR>` must point at an existing directory; fi
 paths and non-existent paths fall through to the interactive launcher (same
 behavior as invoking with no arguments).
 
+### Install the `sourcegit` command
+
+Instead of typing the full path to the executable, you can put a `sourcegit`
+command on your `PATH` from **Preferences → Integration → Install CLI**:
+
+- **macOS / Linux** — creates a symlink `/usr/local/bin/sourcegit` pointing at the
+  running executable. The standard system authentication prompt (macOS) or
+  `pkexec`/`sudo` prompt (Linux) is shown, because `/usr/local/bin` requires
+  elevated permissions.
+- **Windows** — writes a small wrapper `%ProgramData%\SourceGit\bin\sourcegit.cmd`
+  and appends that directory to the system `PATH`. A UAC prompt is shown.
+
+Once installed, `sourcegit <DIR>` works from any terminal. Open the same panel and
+click **Uninstall CLI** to remove the link again.
+
 ## OpenAI
 
 This software supports using OpenAI or other AI service that has an OpenAI compatible HTTP API to generate commit message. You need configurate the service in `Preference` window.

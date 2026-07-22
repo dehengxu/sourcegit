@@ -29,6 +29,10 @@ namespace SourceGit.Native
             void OpenBrowser(string url);
             void OpenWithDefaultEditor(string file);
             void LaunchDetachedGui(string[] args);
+
+            CliLinkStatus GetCliLinkStatus();
+            bool TryCreateCliLink(out string error);
+            bool TryRemoveCliLink(out string error);
         }
 
         public static string DataDir
@@ -279,6 +283,21 @@ namespace SourceGit.Native
         public static void LaunchDetachedGui(string[] args)
         {
             _backend.LaunchDetachedGui(args);
+        }
+
+        public static CliLinkStatus GetCliLinkStatus()
+        {
+            return _backend.GetCliLinkStatus();
+        }
+
+        public static bool TryCreateCliLink(out string error)
+        {
+            return _backend.TryCreateCliLink(out error);
+        }
+
+        public static bool TryRemoveCliLink(out string error)
+        {
+            return _backend.TryRemoveCliLink(out error);
         }
 
         public static string GetAbsPath(string root, string sub)

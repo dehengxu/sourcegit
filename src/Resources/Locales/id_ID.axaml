@@ -537,6 +537,16 @@
   <x:String x:Key="Text.Preferences.DiffMerge.Path" xml:space="preserve">Jalur Instalasi</x:String>
   <x:String x:Key="Text.Preferences.DiffMerge.Path.Placeholder" xml:space="preserve">Masukkan jalur untuk diff/merge tool</x:String>
   <x:String x:Key="Text.Preferences.DiffMerge.Type" xml:space="preserve">Tool</x:String>
+  <x:String x:Key="Text.Preferences.CLI" xml:space="preserve">COMMAND LINE</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Status" xml:space="preserve">Status</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Install" xml:space="preserve">Install CLI</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Uninstall" xml:space="preserve">Uninstall CLI</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Status.Checking" xml:space="preserve">Checking…</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Status.Installed" xml:space="preserve">Installed: {0}</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Status.NotInstalled" xml:space="preserve">Not installed</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Installed" xml:space="preserve">CLI link installed successfully.</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Removed" xml:space="preserve">CLI link removed successfully.</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Failed" xml:space="preserve">Failed: {0}</x:String>
   <x:String x:Key="Text.Preferences.General" xml:space="preserve">UMUM</x:String>
   <x:String x:Key="Text.Preferences.General.Check4UpdatesOnStartup" xml:space="preserve">Periksa pembaruan saat startup</x:String>
   <x:String x:Key="Text.Preferences.General.DateFormat" xml:space="preserve">Format Tanggal</x:String>

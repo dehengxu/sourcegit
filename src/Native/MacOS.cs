@@ -155,6 +155,92 @@ namespace SourceGit.Native
             Process.Start(direct);
         }
 
+        private const string CliLinkPath = "/usr/local/bin/sourcegit";
+
+        public CliLinkStatus GetCliLinkStatus()
+        {
+            if (File.Exists(CliLinkPath))
+                return new CliLinkStatus { Installed = true, Target = CliLinkPath };
+
+            return new CliLinkStatus { Installed = false };
+        }
+
+        public bool TryCreateCliLink(out string error)
+        {
+            var exe = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exe) || !File.Exists(exe))
+            {
+                error = "Cannot determine the current executable path.";
+                return false;
+            }
+
+            // ln -sf '<exe>' '<link>', run with administrator privileges via osascript. Arguments are
+            // POSIX-shell single-quoted (not double-quoted) so they never clash with the AppleScript
+            // string delimiter that RunElevated wraps the command in.
+            var shell = $"mkdir -p {ShellQuote("/usr/local/bin")} && ln -sf {ShellQuote(exe)} {ShellQuote(CliLinkPath)}";
+            return RunElevated(shell, out error);
+        }
+
+        public bool TryRemoveCliLink(out string error)
+        {
+            return RunElevated($"rm -f {ShellQuote(CliLinkPath)}", out error);
+        }
+
+        // Wraps a single shell argument in POSIX single quotes. Any embedded single quote is closed,
+        // quoted, and reopened. This is safe to embed inside an AppleScript "do shell script" body
+        // because it introduces no double quotes.
+        private static string ShellQuote(string arg)
+        {
+            return "'" + arg.Replace("'", "'\\''") + "'";
+        }
+
+        // Runs a shell command with administrator privileges through the standard macOS
+        // authentication prompt. Returns false and sets <paramref name="error"/> when the user
+        // cancels the prompt or the command fails.
+        private static bool RunElevated(string shellCommand, out string error)
+        {
+            // Wrap the shell command in an AppleScript string. The command itself must not contain
+            // unescaped double quotes (our ShellQuote helper uses single quotes), and any backslashes
+            // must be escaped for AppleScript.
+            var escaped = shellCommand.Replace("\\", "\\\\").Replace("\"", "\\\"");
+            var script = $"do shell script \"{escaped}\" with administrator privileges";
+
+            var psi = new ProcessStartInfo("osascript")
+            {
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
+            psi.ArgumentList.Add("-e");
+            psi.ArgumentList.Add(script);
+
+            try
+            {
+                using var proc = Process.Start(psi);
+                if (proc is null)
+                {
+                    error = "Failed to start osascript.";
+                    return false;
+                }
+
+                var stderr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit();
+                if (proc.ExitCode != 0)
+                {
+                    error = string.IsNullOrWhiteSpace(stderr) ? $"osascript exited with code {proc.ExitCode}" : stderr.Trim();
+                    return false;
+                }
+
+                error = string.Empty;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
         private static string LocateAppBundle()
         {
             var exe = Environment.ProcessPath;

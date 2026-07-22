@@ -169,6 +169,8 @@ namespace SourceGit.Views
 
             UpdateGitVersion();
             InitializeComponent();
+
+            RefreshCliLinkStatus();
         }
 
         protected override async void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -278,6 +280,44 @@ namespace SourceGit.Views
             }
 
             e.Handled = true;
+        }
+
+        private async void ToggleCliLink(object _, RoutedEventArgs e)
+        {
+            var status = Native.OS.GetCliLinkStatus();
+            var wasInstalled = status.Installed;
+
+            bool ok = wasInstalled
+                ? Native.OS.TryRemoveCliLink(out var error)
+                : Native.OS.TryCreateCliLink(out error);
+
+            if (ok)
+            {
+                var key = wasInstalled ? "Preferences.CLI.Removed" : "Preferences.CLI.Installed";
+                await new Alert().ShowAsync(this, App.Text(key), false);
+            }
+            else
+            {
+                await new Alert().ShowAsync(this, App.Text("Preferences.CLI.Failed", error), true);
+            }
+
+            RefreshCliLinkStatus();
+            e.Handled = true;
+        }
+
+        private void RefreshCliLinkStatus()
+        {
+            var status = Native.OS.GetCliLinkStatus();
+            if (status.Installed)
+            {
+                PART_CliLinkStatus.Text = App.Text("Preferences.CLI.Status.Installed", status.Target ?? string.Empty);
+                PART_CliLinkAction.Text = App.Text("Preferences.CLI.Uninstall");
+            }
+            else
+            {
+                PART_CliLinkStatus.Text = App.Text("Preferences.CLI.Status.NotInstalled");
+                PART_CliLinkAction.Text = App.Text("Preferences.CLI.Install");
+            }
         }
 
         private async void SelectDefaultCloneDir(object _, RoutedEventArgs e)

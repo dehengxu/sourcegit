@@ -185,6 +185,103 @@ namespace SourceGit.Native
             }
         }
 
+        private const string CliLinkPath = "/usr/local/bin/sourcegit";
+        private const string CliLinkPathSystem = "/usr/bin/sourcegit";
+
+        public CliLinkStatus GetCliLinkStatus()
+        {
+            // A package install (e.g. the shipped .deb) may have placed the link under /usr/bin.
+            if (File.Exists(CliLinkPath))
+                return new CliLinkStatus { Installed = true, Target = CliLinkPath };
+            if (File.Exists(CliLinkPathSystem))
+                return new CliLinkStatus { Installed = true, Target = CliLinkPathSystem };
+
+            return new CliLinkStatus { Installed = false };
+        }
+
+        public bool TryCreateCliLink(out string error)
+        {
+            var exe = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exe) || !File.Exists(exe))
+            {
+                error = "Cannot determine the current executable path.";
+                return false;
+            }
+
+            return RunElevated($"ln -sf {exe.Quoted()} {CliLinkPath.Quoted()}", out error);
+        }
+
+        public bool TryRemoveCliLink(out string error)
+        {
+            return RunElevated($"rm -f {CliLinkPath.Quoted()}", out error);
+        }
+
+        // Runs a command with root privileges using the first available polkit/sudo front-end so the
+        // user gets an interactive authentication prompt. Only removes links we created. The command is
+        // wrapped in `sh -c` so spaces in paths are handled correctly.
+        private static bool RunElevated(string shellCommand, out string error)
+        {
+            var pkexec = FindOnPath("pkexec");
+            if (!string.IsNullOrEmpty(pkexec))
+                return RunElevatedProcess(pkexec, shellCommand, out error);
+
+            var sudo = FindOnPath("sudo");
+            if (!string.IsNullOrEmpty(sudo))
+                return RunElevatedProcess(sudo, shellCommand, out error);
+
+            error = "Neither pkexec nor sudo is available. Please install pkexec (polkit) and try again.";
+            return false;
+        }
+
+        private static bool RunElevatedProcess(string tool, string shellCommand, out string error)
+        {
+            var psi = new ProcessStartInfo(tool)
+            {
+                UseShellExecute = true, // interactive auth prompt needs a controlling terminal/session
+            };
+            psi.ArgumentList.Add("sh");
+            psi.ArgumentList.Add("-c");
+            psi.ArgumentList.Add(shellCommand);
+
+            try
+            {
+                using var proc = Process.Start(psi);
+                if (proc is null)
+                {
+                    error = $"Failed to start {tool}.";
+                    return false;
+                }
+
+                proc.WaitForExit();
+                if (proc.ExitCode != 0)
+                {
+                    error = $"{tool} exited with code {proc.ExitCode}.";
+                    return false;
+                }
+
+                error = string.Empty;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
+        private static string FindOnPath(string name)
+        {
+            var pathVariable = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+            foreach (var dir in pathVariable.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var test = Path.Combine(dir, name);
+                if (File.Exists(test))
+                    return test;
+            }
+
+            return null;
+        }
+
         private string FindExecutable(string filename)
         {
             var pathVariable = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;

@@ -210,6 +210,106 @@ namespace SourceGit.Native
             }
         }
 
+        private static readonly string CliBinDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            "SourceGit", "bin");
+        private static readonly string CliWrapperPath = Path.Combine(CliBinDir, "sourcegit.cmd");
+
+        public CliLinkStatus GetCliLinkStatus()
+        {
+            return File.Exists(CliWrapperPath)
+                ? new CliLinkStatus { Installed = true, Target = CliWrapperPath }
+                : new CliLinkStatus { Installed = false };
+        }
+
+        public bool TryCreateCliLink(out string error)
+        {
+            var exe = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exe) || !File.Exists(exe))
+            {
+                error = "Cannot determine the current executable path.";
+                return false;
+            }
+
+            // Forward all args to the SourceGit GUI executable. The exe is a WinExe subsystem app so
+            // invoking it does not pop a console; the single-arg case takes the existing CLI shim path
+            // (App.TryLaunchAsCliShim) and returns promptly. Base64-encode the content so neither the
+            // exe path nor special characters can break the PowerShell quoting.
+            var wrapper = $"@echo off\r\n\"{exe}\" %*\r\n";
+            var b64 = Convert.ToBase64String(Encoding.ASCII.GetBytes(wrapper));
+
+            return RunElevatedPowerShell(
+                out error,
+                $"New-Item -ItemType Directory -Force -Path '{CliBinDir}' | Out-Null;",
+                $"Set-Content -LiteralPath '{CliWrapperPath}' " +
+                $"-Value ([System.Text.Encoding]::ASCII.GetString([Convert]::FromBase64String('{b64}'))) -Encoding ASCII;",
+                // Append to the system (Machine) PATH if not already present.
+                $"if (([Environment]::GetEnvironmentVariable('Path','Machine') -split ';') -notcontains '{CliBinDir}') " +
+                $"{{ [Environment]::SetEnvironmentVariable('Path', ([Environment]::GetEnvironmentVariable('Path','Machine').TrimEnd(';') + ';' + '{CliBinDir}'), 'Machine') }}");
+        }
+
+        public bool TryRemoveCliLink(out string error)
+        {
+            return RunElevatedPowerShell(
+                out error,
+                $"if (Test-Path -LiteralPath '{CliWrapperPath}') {{ Remove-Item -LiteralPath '{CliWrapperPath}' -Force }};",
+                $"if (([Environment]::GetEnvironmentVariable('Path','Machine') -split ';') -contains '{CliBinDir}') " +
+                $"{{ [Environment]::SetEnvironmentVariable('Path', (([Environment]::GetEnvironmentVariable('Path','Machine') -split ';' | Where-Object {{ $_ -ne '{CliBinDir}' }}) -join ';'), 'Machine') }}");
+        }
+
+        // Launches PowerShell with admin privileges (UAC prompt) to run the given script statements.
+        // Returns false and sets <paramref name="error"/> when the user declines the UAC prompt or the
+        // script fails.
+        private static bool RunElevatedPowerShell(out string error, params string[] statements)
+        {
+            var script = string.Join("\n", statements) + $"\nexit $LASTEXITCODE";
+
+            // -Wait so we can read the exit code; -WindowStyle Hidden to avoid a flashing console.
+            var psi = new ProcessStartInfo("powershell")
+            {
+                UseShellExecute = true, // required for Verb = "runas"
+                Verb = "runas",
+                WindowStyle = ProcessWindowStyle.Hidden,
+            };
+            psi.ArgumentList.Add("-NoProfile");
+            psi.ArgumentList.Add("-NonInteractive");
+            psi.ArgumentList.Add("-ExecutionPolicy");
+            psi.ArgumentList.Add("Bypass");
+            psi.ArgumentList.Add("-Command");
+            psi.ArgumentList.Add(script);
+
+            try
+            {
+                using var proc = Process.Start(psi);
+                if (proc is null)
+                {
+                    error = "Failed to start elevated PowerShell.";
+                    return false;
+                }
+
+                proc.WaitForExit();
+                if (proc.ExitCode != 0)
+                {
+                    error = $"PowerShell exited with code {proc.ExitCode}.";
+                    return false;
+                }
+
+                error = string.Empty;
+                return true;
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                // ERROR_CANCELLED (1223): user clicked "No" on the UAC prompt.
+                error = ex.NativeErrorCode == 1223 ? "Operation cancelled by user." : ex.Message;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
         public void OpenWithDefaultEditor(string file)
         {
             var info = new FileInfo(file);

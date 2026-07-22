@@ -683,6 +683,16 @@
   <x:String x:Key="Text.Preferences.DiffMerge.Path" xml:space="preserve">安装路径</x:String>
   <x:String x:Key="Text.Preferences.DiffMerge.Path.Placeholder" xml:space="preserve">填写工具可执行文件所在位置</x:String>
   <x:String x:Key="Text.Preferences.DiffMerge.Type" xml:space="preserve">工具</x:String>
+  <x:String x:Key="Text.Preferences.CLI" xml:space="preserve">命令行</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Status" xml:space="preserve">状态</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Install" xml:space="preserve">安装命令行</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Uninstall" xml:space="preserve">卸载命令行</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Status.Checking" xml:space="preserve">检查中…</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Status.Installed" xml:space="preserve">已安装：{0}</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Status.NotInstalled" xml:space="preserve">未安装</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Installed" xml:space="preserve">命令行链接安装成功。</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Removed" xml:space="preserve">命令行链接已移除。</x:String>
+  <x:String x:Key="Text.Preferences.CLI.Failed" xml:space="preserve">失败：{0}</x:String>
   <x:String x:Key="Text.Preferences.General" xml:space="preserve">通用配置</x:String>
   <x:String x:Key="Text.Preferences.General.Check4UpdatesOnStartup" xml:space="preserve">启动时检测软件更新</x:String>
   <x:String x:Key="Text.Preferences.General.DateFormat" xml:space="preserve">日期时间格式</x:String>
