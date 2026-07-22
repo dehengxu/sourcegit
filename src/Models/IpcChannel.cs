@@ -35,30 +35,7 @@ namespace SourceGit.Models
 
         public void SendToFirstInstance(string cmd)
         {
-            try
-            {
-                using (var client = new NamedPipeClientStream(".", "SourceGitIPCChannel" + Environment.UserName, PipeDirection.Out, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly))
-                {
-                    client.Connect(1000);
-                    if (!client.IsConnected)
-                        return;
-
-                    using (var writer = new StreamWriter(client))
-                    {
-                        writer.WriteLine(cmd);
-                        writer.Flush();
-                    }
-
-                    if (OperatingSystem.IsWindows())
-                        client.WaitForPipeDrain();
-                    else
-                        Thread.Sleep(1000);
-                }
-            }
-            catch
-            {
-                // IGNORE
-            }
+            IpcClient.TrySendPath(cmd);
         }
 
         public void Dispose()
