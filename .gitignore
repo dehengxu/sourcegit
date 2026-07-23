@@ -1,6 +1,7 @@
 .vs/
 .vscode/
 .idea/
+.zcode/
 
 *.sln.docstates
 *.user
