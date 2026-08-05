@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.Pipes;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,6 +17,9 @@ namespace SourceGit.Models
             try
             {
                 _singletonLock = File.Open(Path.Combine(Native.OS.DataDir, "process.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                // 写自己的 PID 到独立文件,供 client 端 IpcClient 拼 pipe name
+                // (不能写到 process.lock,因为这里已经用 FileShare.None 持有了它)
+                File.WriteAllText(Path.Combine(Native.OS.DataDir, "process.pid"), Environment.ProcessId.ToString());
                 IsFirstInstance = true;
                 _server = new NamedPipeServerStream(
                     GetPipeName(),
@@ -44,14 +45,22 @@ namespace SourceGit.Models
         {
             _cancellationTokenSource?.Cancel();
             _singletonLock?.Dispose();
+            // 清理 PID 文件,避免 client 端拿到一个已死进程的 PID(僵尸)
+            try { File.Delete(Path.Combine(Native.OS.DataDir, "process.pid")); } catch { /* 忽略 */ }
         }
 
         private static string GetPipeName()
         {
-            var dataDir = Native.OS.DataDir.Replace('\\', '/').TrimEnd('/');
-            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(dataDir));
-            var hashStr = Convert.ToHexString(hash)[..16];
-            return $"SourceGitIPCChannel{Environment.UserName}_{hashStr}";
+            // NOTE: .NET 10 on macOS maps NamedPipe to a unix domain socket under
+            // /var/folders/.../T/CoreFxPipe_<name>, where sun_path is limited to
+            // 104 chars. The previous name (SourceGitIPCChannel<user>_<16hex>)
+            // pushes the total path to ~105 chars on common systems, which
+            // throws ArgumentOutOfRangeException out of NamedPipeServerStream's
+            // ctor and makes IpcChannel.IsFirstInstance always false.
+            //
+            // Use ProcessId (guaranteed unique per running process) so the
+            // resulting CoreFxPipe_SourceGit_<pid> stays well under 104 chars.
+            return $"SourceGit_{Environment.ProcessId}";
         }
 
         private async void StartServer()
