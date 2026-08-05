@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.IO.Pipes;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,9 +19,6 @@ namespace SourceGit.Models
             try
             {
                 _singletonLock = File.Open(Path.Combine(Native.OS.DataDir, "process.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-                // 写自己的 PID 到独立文件,供 client 端 IpcClient 拼 pipe name
-                // (不能写到 process.lock,因为这里已经用 FileShare.None 持有了它)
-                File.WriteAllText(Path.Combine(Native.OS.DataDir, "process.pid"), Environment.ProcessId.ToString());
                 IsFirstInstance = true;
                 _server = new NamedPipeServerStream(
                     GetPipeName(),
@@ -45,22 +44,20 @@ namespace SourceGit.Models
         {
             _cancellationTokenSource?.Cancel();
             _singletonLock?.Dispose();
-            // 清理 PID 文件,避免 client 端拿到一个已死进程的 PID(僵尸)
-            try { File.Delete(Path.Combine(Native.OS.DataDir, "process.pid")); } catch { /* 忽略 */ }
         }
 
-        private static string GetPipeName()
+        // internal: 让 IpcClient 复用同名的 pipe name(避免在 client 端重复实现 hash 逻辑)
+        internal static string GetPipeName()
         {
-            // NOTE: .NET 10 on macOS maps NamedPipe to a unix domain socket under
-            // /var/folders/.../T/CoreFxPipe_<name>, where sun_path is limited to
-            // 104 chars. The previous name (SourceGitIPCChannel<user>_<16hex>)
-            // pushes the total path to ~105 chars on common systems, which
-            // throws ArgumentOutOfRangeException out of NamedPipeServerStream's
-            // ctor and makes IpcChannel.IsFirstInstance always false.
-            //
-            // Use ProcessId (guaranteed unique per running process) so the
-            // resulting CoreFxPipe_SourceGit_<pid> stays well under 104 chars.
-            return $"SourceGit_{Environment.ProcessId}";
+            // SourceGit does not support multiple instances on macOS, so we can use a fixed pipe name for macOS.
+            if (OperatingSystem.IsMacOS())
+                return "SourceGit";
+
+            // Windows and Linux can have multiple instances of SourceGit running (portable-mode), so we need to generate a unique pipe name based on the data directory.
+            var dataDir = Native.OS.DataDir.Replace('\\', '/').TrimEnd('/');
+            var hashStr = $"{Environment.UserName}_{dataDir}";
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(hashStr))).Substring(0, 10);
+            return $"SG_{hash}";
         }
 
         private async void StartServer()
