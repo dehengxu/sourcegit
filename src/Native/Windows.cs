@@ -36,7 +36,6 @@ namespace SourceGit.Native
 
         public void SetupWindow(Window window)
         {
-            window.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
             window.ExtendClientAreaToDecorationsHint = true;
             window.BorderThickness = new Thickness(1);
             window.Padding = new Thickness(0);

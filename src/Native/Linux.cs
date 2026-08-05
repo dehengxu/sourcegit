@@ -26,12 +26,10 @@ namespace SourceGit.Native
 
             if (OS.UseSystemWindowFrame)
             {
-                window.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.Default;
                 window.ExtendClientAreaToDecorationsHint = false;
             }
             else
             {
-                window.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
                 window.ExtendClientAreaToDecorationsHint = true;
                 window.Classes.Add("custom_window_frame");
             }

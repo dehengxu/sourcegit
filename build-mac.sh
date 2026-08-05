@@ -88,16 +88,34 @@ echo
 
 # ============ 步骤 2：dotnet publish ============
 echo "⚙️  步骤 2/4  dotnet publish ($RUNTIME, $CONFIG) with size optimizations"
+
+# AOT 优化参数(仅 PublishAot=true 时生效)
+AOT_FLAGS=(
+  -p:DebugType=none
+  -p:StripSymbols=true
+  -p:IlcOptimizationPreference=Size
+  -p:IlcGenerateStackTraceData=false
+  -p:IlcGenerateEmptyDllImportThunks=false
+  -p:IlcInvokeDataCount=0
+)
+
+# DisableAOT=true 时退化为普通 publish,绕开 Avalonia 11.3.x + macOS 26 + NativeAOT
+# 的 Dispatcher.MainLoop "Dispatcher shut down" 启动期 bug。
+# 强绑 self-contained,否则 .app 启动时 LaunchServices 找不到系统 .NET runtime。
+if [[ "${DisableAOT:-false}" == "true" ]]; then
+  echo "   ⚠️  DisableAOT=true — 跳过 AOT,改用普通 self-contained publish(产物 ~200MB,自带 .NET 10 runtime)"
+  AOT_FLAGS=(
+    -p:DisableAOT=true
+    --self-contained true
+    -p:PublishSingleFile=false
+  )
+fi
+
 dotnet publish \
   -c "$CONFIG" \
   -r "$RUNTIME" \
   -o "$PUBLISH_DIR" \
-  -p:DebugType=none \
-  -p:StripSymbols=true \
-  -p:IlcOptimizationPreference=Size \
-  -p:IlcGenerateStackTraceData=false \
-  -p:IlcGenerateEmptyDllImportThunks=false \
-  -p:IlcInvokeDataCount=0 \
+  "${AOT_FLAGS[@]}" \
   src/SourceGit.csproj 2>&1 | tail -10
 echo
 

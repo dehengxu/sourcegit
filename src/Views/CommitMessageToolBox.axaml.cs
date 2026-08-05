@@ -299,7 +299,7 @@ namespace SourceGit.Views
             }
         }
 
-        protected override void OnLostFocus(RoutedEventArgs e)
+        protected override void OnLostFocus(Avalonia.Input.FocusChangedEventArgs e)
         {
             base.OnLostFocus(e);
             Suggestions = null;

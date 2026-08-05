@@ -1017,7 +1017,7 @@ namespace SourceGit.Views
             _scrollViewer = this.FindDescendantOfType<ScrollViewer>();
             if (_scrollViewer != null)
             {
-                _scrollViewer.Bind(ScrollViewer.OffsetProperty, new Binding("ScrollOffset", BindingMode.TwoWay));
+                _scrollViewer.Bind(ScrollViewer.OffsetProperty, new ReflectionBinding("ScrollOffset") { Mode = BindingMode.TwoWay });
                 _scrollViewer.ScrollChanged += OnTextViewScrollChanged;
             }
         }
@@ -1203,7 +1203,7 @@ namespace SourceGit.Views
             if (_scrollViewer != null)
             {
                 _scrollViewer.ScrollChanged += OnTextViewScrollChanged;
-                _scrollViewer.Bind(ScrollViewer.OffsetProperty, new Binding("ScrollOffset", BindingMode.OneWay));
+                _scrollViewer.Bind(ScrollViewer.OffsetProperty, new ReflectionBinding("ScrollOffset") { Mode = BindingMode.OneWay });
             }
         }
 

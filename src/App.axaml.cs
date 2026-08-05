@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Fonts;
@@ -253,7 +252,10 @@ namespace SourceGit
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                BindingPlugins.DataValidators.RemoveAt(0);
+                // NOTE: Avalonia 12.x made BindingPlugins internal. The default DataAnnotations validator
+                // is no longer auto-registered for non-attributed models, so removing it is no longer
+                // needed (and was the only reason for the 11.x call below).
+                // BindingPlugins.DataValidators.RemoveAt(0);
 
                 // Disable tooltip if window is not active.
                 ToolTip.ToolTipOpeningEvent.AddClassHandler<Control>((c, e) =>
