@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SourceGit AI · Phase 0 交互原型 (H5 Mock)</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- 仿真窗口标题栏 -->
+  <div class="titlebar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="title">sourcegit — 3rd/sourcegit (feat/hwx-s0)</span>
+  </div>
+
+  <div class="body">
+    <!-- 左侧栏:仓库/分支(静态仿真) -->
+    <aside class="sidebar">
+      <div class="sec-title">仓库</div>
+      <div class="repo active">▰ 3rd/sourcegit</div>
+      <div class="sec-title">分支</div>
+      <div class="branch">◇ origin/master</div>
+      <div class="branch current">◆ feat/hwx-s0</div>
+      <div class="sec-title">工作区</div>
+      <div class="branch">▦ worktrees (1)</div>
+    </aside>
+
+    <!-- 主区 -->
+    <main class="main">
+      <!-- 工具栏:页签 + AI 开关(决策⑤:正式版默认关,演示页默认开) -->
+      <div class="toolbar">
+        <div class="tabs">
+          <button class="tab active">Working Copy</button>
+          <button class="tab">Histories</button>
+        </div>
+        <label class="ai-switch" title="决策⑤:渐进披露 — 正式版默认关闭">
+          <input type="checkbox" id="aiToggle" checked>
+          <span>🤖 AI 助手</span>
+        </label>
+      </div>
+
+      <!-- 状态横幅槽位:对应 Repository.axaml 的 InProgressContext Row 0 -->
+      <div class="banner-slot" id="bannerSlot"></div>
+
+      <!-- 工作区:改动列表 + diff 视图(仿真 WorkingCopy 页) -->
+      <div class="workarea">
+        <section class="changes">
+          <div class="pane-head">
+            <span>未暂存 (<span id="unstagedCount">2</span>)</span>
+            <button class="mini" id="btnStageAll">全部暂存</button>
+          </div>
+          <ul class="filelist" id="unstagedList"></ul>
+          <div class="pane-head"><span>已暂存 (0)</span></div>
+          <ul class="filelist" id="stagedList"></ul>
+        </section>
+        <section class="diffview">
+          <div class="pane-head"><span id="diffTitle">README.md</span><span class="dim" id="diffMeta"></span></div>
+          <pre class="diff" id="diffPane"></pre>
+        </section>
+      </div>
+
+      <!-- 底部对话 dock(决策①:主区底部,可折叠) -->
+      <div class="dock-resizer" id="dockResizer" title="拖拽调整高度(高度记忆 → Preferences.Layout)"></div>
+      <section class="chat-dock" id="chatDock">
+        <header class="dock-head">
+          <span>🤖 AI 助手 · Mock 会话(无 LLM)</span>
+          <span class="dock-tools">
+            <button class="mini" id="btnPlay">▶ 播放演示</button>
+            <button class="mini" id="btnCollapse">▾ 折叠</button>
+          </span>
+        </header>
+        <div class="stream" id="stream"></div>
+        <footer class="composer">
+          <input id="composerInput" type="text" placeholder="输入消息(任意内容推进演示)…">
+          <button id="btnSend">发送</button>
+        </footer>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- 权限确认弹窗(决策④:执行命令永远确认,显示完整命令行) -->
+<div class="modal-mask" id="permModal" hidden>
+  <div class="modal">
+    <div class="modal-title">🛡 Agent 请求执行命令</div>
+    <p class="dim">将在此仓库中运行:</p>
+    <pre class="cmdline" id="permCmd"></pre>
+    <label class="remember"><input type="checkbox" id="permRemember"> 本次会话记住该类命令的授权</label>
+    <div class="modal-actions">
+      <button class="btn primary" id="permAllow">允许</button>
+      <button class="btn" id="permDeny">拒绝</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,7 +1,8 @@
 # AI Phase 0 交互原型计划(含计划↔代码绑定机制)
 
 > **分支**:`feat/hwx-s0`(自 `feat/hwx-build` 切出)
-> **目标**:用 Wizard-of-Oz 方式(纯 Avalonia UI + mock agent 回复,无 LLM 调用)验证五条核心交互决策,为嵌入式 Agent 路线(模式 D)定 UI 基调。
+> **目标**:用 Wizard-of-Oz 方式(mock agent 回复,无 LLM 调用)验证五条核心交互决策,为嵌入式 Agent 路线(模式 D)定 UI 基调。
+> **两阶段方式(2026-08-31 用户拍板)**:**M0 用 H5 技术栈快速实现原型**(动态语言、浏览器直出、AI 可直接自验画面);用户评审通过后,**M1-M3 用项目技术栈(Avalonia)按映射表翻译**。
 > **本文档是 Phase 0 进度的唯一源头**(source of truth):任务状态、里程碑 tag 均以本文档及其绑定的 git 历史为准;Notion 侧《SourceGit AI · UI 交互设计与 Phase 0 规划》只是镜像展示。
 > **设计背景**:五条交互决策的完整论证与市场分析见 Notion 正典文档《SourceGit · 改造为 AI Coding Agent Control Panel · 2026-08-28》及其同级的 Phase 0 设计文档。
 
@@ -21,7 +22,15 @@
 
 > 状态勾选**必须与该任务的实现代码在同一个 commit 中更新**(见 §3 原子性约定)。
 
-### M1 对话面板骨架
+### M0 H5 交互原型(用户评审门)
+
+- [x] **T-s0-0 H5 交互原型页**
+  - 交付:`docs/prototype/ai-s0/`(index.html + styles.css + app.js + README.md 翻译映射);零构建、零 npm 依赖,`python3 -m http.server -d docs/prototype/ai-s0 8765` 打开 http://localhost:8765 查看
+  - 技术决策(2026-08-31):原型用 H5 快速实现——动态语言迭代快、浏览器直出、AI 可在浏览器中直接自验画面;结构化设计(布局分区对齐 SourceGit、消息流数据驱动、README 含 H5→Avalonia 控件映射表)保证翻译是机械工作
+  - 验收:五条交互决策(底部 dock / 三级渲染 / 审查回路 / 权限分级 / 状态横幅)均可在浏览器中完整演示
+  - **M0 出口 = 用户评审通过** → 打 `ai-s0/m0`;评审不通过则在本任务内迭代(同一 Task ID 追加 Refs commit)
+
+### M1 对话面板骨架(Avalonia 翻译)
 
 - [ ] **T-s0-1 底部 dock 对话面板**
   - 交付:`Views/AIChatPanel.axaml`(+ code-behind)、对应 ViewModel;挂载点:`Repository.axaml`(dock 位置)、工具栏开关按钮、`Models/Preference.cs`(面板高度字段)
@@ -87,11 +96,13 @@
 
 ## 4. Phase 0 总体验收
 
+> 验收方式(2026-08-31 调整):交互逻辑类条目在 M0 H5 原型上先行验证;与现有视图共存/布局记忆类条目在 M1-M3 Avalonia 翻译后验证。
+
 - [ ] 不看终端,只看 GUI 能说出 agent 正在做什么、进行到哪一步
 - [ ] 从动作卡片到看到 diff ≤ 2 次点击
 - [ ] Reject 一个修改后,工作区确无残留
-- [ ] 面板折叠/展开不打断正在看的 diff/graph
-- [ ] 关闭功能开关后,界面与上游一致
+- [ ] 面板折叠/展开不打断正在看的 diff/graph(Avalonia 阶段验证)
+- [ ] 关闭功能开关后,界面与上游一致(Avalonia 阶段验证)
 - [ ] 全程无 LLM/网络依赖(mock 数据驱动)
 
 ## 5. 工程约束(上游合并缓解)
