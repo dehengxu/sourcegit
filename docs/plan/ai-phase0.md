@@ -111,3 +111,4 @@
 - 对现有文件的改动仅限最小挂载点:`Repository.axaml`(横幅槽位/dock 挂载)、工具栏按钮、`Preferences` 布局字段。
 - mock 数据层与未来真 agent 层共用 `IAgentSession` 接口,Phase 1 换实现不动 UI。
 - 不改 `src/AI/` 现有文件(commit message 生成功能保持独立)。
+- **csproj 改动(M2 期间引入)**:为修复 `AIChatPanel.axaml` 的编译期 `x:DataType` 引发的 `InvalidCastException`,把 `SourceGit.csproj` 的 `AvaloniaUseCompiledBindingsByDefault` 由 `true` 改为 `false`(其他视图都未声明 `x:DataType`,运行时 binding 是默认行为,影响面为零)。**此行是上游 merge 时需人工复核的一行冲突点**,若上游将此项改回 `true` 需要确认 `AIChatPanel.axaml` 的 UserControl 仍不带 `x:DataType`。
