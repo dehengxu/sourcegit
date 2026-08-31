@@ -98,6 +98,11 @@ namespace SourceGit.ViewModels
             get => _stashesPage;
         }
 
+        public AIChatPanel AIChat
+        {
+            get;
+        } = new();
+
         public bool IsHistoriesVisible
         {
             get => SelectedViewIndex == 0;

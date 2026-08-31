@@ -53,6 +53,7 @@
       <Grid Grid.Row="1" Margin="0,0,0,8" RowDefinitions="Auto,Auto,*" IsVisible="{Binding !IsSearchingCommits}">
         <!-- Page Switcher for Right Panel -->
         <Border Grid.Row="0" Margin="8,0,4,0" BorderThickness="1" BorderBrush="{DynamicResource Brush.Border2}" CornerRadius="6">
+          <Grid RowDefinitions="*,Auto">
           <ListBox Background="Transparent" Padding="4" SelectedIndex="{Binding SelectedViewIndex, Mode=TwoWay}" SelectionMode="AlwaysSelected">
             <ListBox.Styles>
               <Style Selector="Path.icon">
@@ -170,6 +171,16 @@
               </Grid>
             </ListBoxItem>
           </ListBox>
+
+          <!-- AI chat dock toggle (docs/plan/ai-phase0.md T-s0-1, decision 5: off by default) -->
+          <ToggleButton Grid.Row="1"
+                        Margin="4,0,4,4"
+                        Padding="8,4"
+                        HorizontalContentAlignment="Left"
+                        FontSize="12"
+                        Content="🤖 AI Assistant"
+                        IsChecked="{Binding AIChat.IsOpen, Mode=TwoWay}"/>
+          </Grid>
         </Border>
 
         <!-- Filter Branches/Tags/Submodules -->
@@ -715,7 +726,7 @@
                   Focusable="False"/>
 
     <!-- Right -->
-    <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,*">
+    <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,*,Auto">
       <Grid Grid.Row="0" Height="28" ColumnDefinitions="*,Auto,Auto" Background="{DynamicResource Brush.Conflict}" IsVisible="{Binding InProgressContext, Converter={x:Static ObjectConverters.IsNotNull}}">
         <ContentControl Grid.Column="0" Margin="8,0" Content="{Binding InProgressContext}">
           <ContentControl.DataTemplates>
@@ -1028,6 +1039,9 @@
           <v:StashesPage DataContext="{Binding StashesPage, Mode=OneWay}"/>
         </Border>
       </Grid>
+
+      <!-- AI chat dock (docs/plan/ai-phase0.md T-s0-1). Hidden by default (decision 5). -->
+      <v:AIChatPanel Grid.Row="4" IsVisible="{Binding AIChat.IsOpen}"/>
     </Grid>
 
     <!-- Right (Auto-Fetch) -->

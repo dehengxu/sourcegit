@@ -32,10 +32,10 @@
 
 ### M1 对话面板骨架(Avalonia 翻译)
 
-- [ ] **T-s0-1 底部 dock 对话面板**
+- [x] **T-s0-1 底部 dock 对话面板**
   - 交付:`Views/AIChatPanel.axaml`(+ code-behind)、对应 ViewModel;挂载点:`Repository.axaml`(dock 位置)、工具栏开关按钮、`Models/Preference.cs`(面板高度字段)
   - 验收:面板可开合/拖拽高度并记忆;开关默认关;关闭开关后界面与上游一致
-- [ ] **T-s0-2 mock 会话数据层**
+- [x] **T-s0-2 mock 会话数据层**
   - 交付:`IAgentSession` 接口 + `MockAgentSession`(硬编码回复序列:思考/工具调用/回答;含一个 ✏️ 修改提议的假 patch)
   - 验收:面板内跑通一段完整 mock 会话;无任何 LLM/网络调用;接口抽象足以在 Phase 1 换真实现而不动 UI
 

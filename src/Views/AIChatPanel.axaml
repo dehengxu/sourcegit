@@ -1,0 +1,158 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SourceGit.ViewModels"
+             xmlns:ai="clr-namespace:SourceGit.AI"
+             mc:Ignorable="d"
+             x:Class="SourceGit.Views.AIChatPanel"
+             x:DataType="vm:AIChatPanel"
+             Height="{Binding Source={x:Static vm:Preferences.Instance}, Path=Layout.AIChatPanelHeight, Mode=OneWay}">
+  <Grid RowDefinitions="4,*">
+
+    <!-- Drag handle: resizes by writing the persisted layout height (T-s0-1) -->
+    <Border x:Name="PART_Resizer"
+            Grid.Row="0"
+            Background="Transparent"
+            Cursor="SizeNorthSouth"
+            PointerPressed="OnResizerPressed"
+            PointerMoved="OnResizerMoved"
+            PointerReleased="OnResizerReleased"/>
+
+    <Border Grid.Row="1"
+            BorderThickness="0,1,0,0"
+            BorderBrush="{DynamicResource Brush.Border0}"
+            Background="{DynamicResource Brush.ToolBar}">
+      <DockPanel>
+
+        <!-- Header -->
+        <Grid DockPanel.Dock="Top"
+              Height="30"
+              ColumnDefinitions="*,Auto,Auto,Auto"
+              Background="{DynamicResource Brush.Border0}">
+          <TextBlock Grid.Column="0"
+                     Margin="10,0"
+                     VerticalAlignment="Center"
+                     FontSize="12"
+                     Foreground="{DynamicResource Brush.FG2}"
+                     Text="🤖 AI Assistant (Mock Session)"/>
+          <Button Grid.Column="1"
+                  Classes="flat"
+                  FontSize="11"
+                  Padding="8,2"
+                  Command="{Binding ClearCommand}"
+                  ToolTip.Tip="Clear messages">Clear</Button>
+          <Button Grid.Column="2"
+                  Classes="flat"
+                  FontSize="11"
+                  Padding="8,2"
+                  Command="{Binding CancelCommand}"
+                  IsEnabled="{Binding IsGenerating}">Cancel</Button>
+          <Button Grid.Column="3"
+                  Classes="flat"
+                  FontSize="11"
+                  Padding="8,2"
+                  Command="{Binding ToggleOpenCommand}">▾ Collapse</Button>
+        </Grid>
+
+        <!-- Composer -->
+        <DockPanel DockPanel.Dock="Bottom" Margin="8">
+          <Button DockPanel.Dock="Right"
+                  Margin="8,0,0,0"
+                  MinWidth="60"
+                  Command="{Binding SendCommand}">Send</Button>
+          <TextBox x:Name="PART_Input"
+                   PlaceholderText="Ask anything (mock)…"
+                   Text="{Binding InputText, Mode=TwoWay}"
+                   KeyDown="OnInputKeyDown"/>
+        </DockPanel>
+
+        <!-- Message stream: one DataTemplate per message kind (three-level rendering arrives in M2/T-s0-3) -->
+        <ScrollViewer x:Name="PART_Scroll">
+          <ItemsControl ItemsSource="{Binding Messages}" Margin="10,8,10,8">
+            <ItemsControl.DataTemplates>
+              <DataTemplate DataType="ai:AIAgentUserMessage">
+                <Border HorizontalAlignment="Right"
+                        MaxWidth="440"
+                        Margin="0,0,0,6"
+                        Padding="10,6"
+                        CornerRadius="8,8,2,8"
+                        Background="{DynamicResource Brush.Border1}">
+                  <TextBlock TextWrapping="Wrap" Text="{Binding Text}"/>
+                </Border>
+              </DataTemplate>
+
+              <DataTemplate DataType="ai:AIAgentReasoningMessage">
+                <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource Brush.FG2}">
+                  <Run Text="💭 "/>
+                  <Run Text="{Binding Text}"/>
+                </TextBlock>
+              </DataTemplate>
+
+              <DataTemplate DataType="ai:AIAgentReadFileMessage">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Spacing="6">
+                  <TextBlock Text="📖"/>
+                  <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Text="{Binding File}"/>
+                  <TextBlock FontSize="11" Foreground="{DynamicResource Brush.FG2}" Text="{Binding Detail}"/>
+                </StackPanel>
+              </DataTemplate>
+
+              <DataTemplate DataType="ai:AIAgentSearchMessage">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Spacing="6">
+                  <TextBlock Text="🔍"/>
+                  <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Text="{Binding Pattern}"/>
+                  <TextBlock FontSize="11" Foreground="{DynamicResource Brush.FG2}" Text="{Binding Detail}"/>
+                </StackPanel>
+              </DataTemplate>
+
+              <DataTemplate DataType="ai:AIAgentProposeChangeMessage">
+                <Border Margin="0,0,0,4"
+                        Padding="8,4"
+                        CornerRadius="4"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource Brush.Border2}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="✏️"/>
+                    <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Text="{Binding File}"/>
+                    <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Foreground="MediumSeaGreen" Text="{Binding LinesAdded, StringFormat=' +{0}'}"/>
+                    <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Foreground="IndianRed" Text="{Binding LinesDeleted, StringFormat=' −{0}'}"/>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+
+              <DataTemplate DataType="ai:AIAgentCommandMessage">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Spacing="6">
+                  <TextBlock Text="🛠"/>
+                  <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Foreground="{DynamicResource Brush.FG1}" Text="{Binding CommandLine}"/>
+                </StackPanel>
+              </DataTemplate>
+
+              <DataTemplate DataType="ai:AIAgentCommandResultMessage">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Spacing="6">
+                  <TextBlock Text="✅"/>
+                  <TextBlock FontSize="11" Foreground="{DynamicResource Brush.FG2}" Text="{Binding Text}"/>
+                </StackPanel>
+              </DataTemplate>
+
+              <DataTemplate DataType="ai:AIAgentAnswerMessage">
+                <StackPanel Margin="0,0,0,6" Spacing="2">
+                  <TextBlock FontSize="11" Foreground="{DynamicResource Brush.Accent}" Text="🤖 Assistant"/>
+                  <TextBlock TextWrapping="Wrap" MaxWidth="560" Text="{Binding Text}"/>
+                </StackPanel>
+              </DataTemplate>
+
+              <DataTemplate DataType="ai:AIAgentNoteMessage">
+                <TextBlock Margin="0,4"
+                           HorizontalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource Brush.FG2}"
+                           Text="{Binding Text}"/>
+              </DataTemplate>
+            </ItemsControl.DataTemplates>
+          </ItemsControl>
+        </ScrollViewer>
+
+      </DockPanel>
+    </Border>
+  </Grid>
+</UserControl>
