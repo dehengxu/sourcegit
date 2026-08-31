@@ -131,6 +131,12 @@
       <Button Classes="icon_button" Width="32" Click="NavigateToHead" ToolTip.Tip="{DynamicResource Text.Repository.NavigateToCurrentHead}">
         <Path Width="13" Height="13" Margin="0,2,0,0" Data="{StaticResource Icons.Target}" Fill="{DynamicResource Brush.FG1}"/>
       </Button>
+
+      <!-- AI assistant toggle (docs/plan/ai-phase0.md T-s0-1, decision 5: off by default) -->
+      <CheckBox Margin="12,0,4,0"
+                Content="🤖 AI 助手"
+                ToolTip.Tip="AI 助手(决策⑤:默认关闭)"
+                IsChecked="{Binding AIChat.IsOpen, Mode=TwoWay}"/>
     </StackPanel>
   </Grid>
 </UserControl>
