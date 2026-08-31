@@ -6,7 +6,6 @@
              xmlns:ai="clr-namespace:SourceGit.AI"
              mc:Ignorable="d"
              x:Class="SourceGit.Views.AIChatPanel"
-             x:DataType="vm:AIChatPanel"
              Height="{Binding Source={x:Static vm:Preferences.Instance}, Path=Layout.AIChatPanelHeight, Mode=OneWay}">
   <Grid RowDefinitions="4,*">
 
