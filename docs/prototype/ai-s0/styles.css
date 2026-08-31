@@ -116,6 +116,7 @@ body { font: 13px/1.5 -apple-system, "PingFang SC", "Microsoft YaHei", sans-seri
 
 /* 权限弹窗(决策④) */
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.modal-mask[hidden] { display: none; }
 .modal { width: 460px; background: var(--bg1); border: 1px solid var(--border); border-radius: 9px; padding: 16px; }
 .modal-title { font-size: 14px; margin-bottom: 8px; }
 .cmdline { background: var(--bg0); border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; font-family: var(--mono); font-size: 12px; margin: 8px 0; color: var(--yellow); white-space: pre-wrap; }
