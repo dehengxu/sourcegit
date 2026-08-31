@@ -1,0 +1,34 @@
+<v:ChromelessWindow xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                    xmlns:v="using:SourceGit.Views"
+                    mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="480"
+                    x:Class="SourceGit.Views.AIProposeDiff"
+                    x:Name="ThisControl"
+                    Icon="/App.ico"
+                    Title="AI 提议 · 未应用"
+                    Width="760" Height="480"
+                    WindowStartupLocation="CenterOwner">
+  <Grid RowDefinitions="Auto,*">
+    <!-- TitleBar -->
+    <Grid Grid.Row="0" Height="28" IsVisible="{Binding !#ThisControl.UseSystemWindowFrame}">
+      <Border Background="{DynamicResource Brush.TitleBar}"
+              BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border0}"
+              PointerPressed="BeginMoveWindow"/>
+
+      <TextBlock Margin="12,0,0,0"
+                 VerticalAlignment="Center"
+                 Text="{Binding #ThisControl.FileName}"/>
+
+      <v:CaptionButtons HorizontalAlignment="Right"
+                        IsCloseButtonOnly="True"
+                        IsVisible="{OnPlatform True, macOS=False}"/>
+    </Grid>
+
+    <!-- Diff preview: reuses the app's TextDiffView (decision 3 review surface) -->
+    <Grid Grid.Row="1" Background="{DynamicResource Brush.HistoryBG}">
+      <v:TextDiffView/>
+    </Grid>
+  </Grid>
+</v:ChromelessWindow>

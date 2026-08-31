@@ -2,7 +2,10 @@ using System;
 
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 
+using SourceGit.AI;
 using SourceGit.ViewModels;
 
 namespace SourceGit.Views
@@ -21,6 +24,26 @@ namespace SourceGit.Views
                 vm.SendCommand.Execute(null);
                 e.Handled = true;
             }
+        }
+
+        private void OnViewProposeDiff(object sender, RoutedEventArgs e)
+        {
+            if (e.Source is not Control { DataContext: AIAgentProposeChangeMessage proposal } ||
+                DataContext is not ViewModels.AIChatPanel vm)
+            {
+                return;
+            }
+
+            var dialog = new AIProposeDiff()
+            {
+                FileName = proposal.File,
+                DataContext = vm.BuildProposalDiff(proposal),
+            };
+
+            if (this.FindAncestorOfType<Window>() is { } owner)
+                dialog.ShowDialog(owner);
+
+            e.Handled = true;
         }
 
         private void OnResizerPressed(object sender, PointerPressedEventArgs e)

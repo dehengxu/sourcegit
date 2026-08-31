@@ -67,7 +67,7 @@
                    KeyDown="OnInputKeyDown"/>
         </DockPanel>
 
-        <!-- Message stream: one DataTemplate per message kind (three-level rendering arrives in M2/T-s0-3) -->
+        <!-- Message stream: three-level rendering (T-s0-3) + review loop cards (T-s0-4/5) -->
         <ScrollViewer x:Name="PART_Scroll">
           <ItemsControl ItemsSource="{Binding Messages}" Margin="10,8,10,8">
             <ItemsControl.DataTemplates>
@@ -82,58 +82,132 @@
                 </Border>
               </DataTemplate>
 
+              <!-- Level 1: reasoning, dimmed and collapsed by default (T-s0-3) -->
               <DataTemplate DataType="ai:AIAgentReasoningMessage">
-                <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource Brush.FG2}">
-                  <Run Text="💭 "/>
-                  <Run Text="{Binding Text}"/>
-                </TextBlock>
+                <Expander Margin="0,0,0,6">
+                  <Expander.Header>
+                    <TextBlock FontSize="11" Foreground="{DynamicResource Brush.FG2}" Text="💭 思考过程"/>
+                  </Expander.Header>
+                  <TextBlock Margin="10,4,0,6"
+                             TextWrapping="Wrap"
+                             FontSize="11"
+                             Foreground="{DynamicResource Brush.FG2}"
+                             Text="{Binding Text}"/>
+                </Expander>
               </DataTemplate>
 
+              <!-- Level 2: read/search action cards (T-s0-3) -->
               <DataTemplate DataType="ai:AIAgentReadFileMessage">
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Spacing="6">
-                  <TextBlock Text="📖"/>
-                  <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Text="{Binding File}"/>
-                  <TextBlock FontSize="11" Foreground="{DynamicResource Brush.FG2}" Text="{Binding Detail}"/>
-                </StackPanel>
-              </DataTemplate>
-
-              <DataTemplate DataType="ai:AIAgentSearchMessage">
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Spacing="6">
-                  <TextBlock Text="🔍"/>
-                  <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Text="{Binding Pattern}"/>
-                  <TextBlock FontSize="11" Foreground="{DynamicResource Brush.FG2}" Text="{Binding Detail}"/>
-                </StackPanel>
-              </DataTemplate>
-
-              <DataTemplate DataType="ai:AIAgentProposeChangeMessage">
                 <Border Margin="0,0,0,4"
                         Padding="8,4"
                         CornerRadius="4"
                         BorderThickness="1"
                         BorderBrush="{DynamicResource Brush.Border2}">
                   <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="✏️"/>
+                    <TextBlock Text="📖"/>
                     <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Text="{Binding File}"/>
-                    <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Foreground="MediumSeaGreen" Text="{Binding LinesAdded, StringFormat=' +{0}'}"/>
-                    <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Foreground="IndianRed" Text="{Binding LinesDeleted, StringFormat=' −{0}'}"/>
+                    <TextBlock FontSize="11" Foreground="{DynamicResource Brush.FG2}" Text="{Binding Detail}"/>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+
+              <DataTemplate DataType="ai:AIAgentSearchMessage">
+                <Border Margin="0,0,0,4"
+                        Padding="8,4"
+                        CornerRadius="4"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource Brush.Border2}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="🔍"/>
+                    <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Text="{Binding Pattern}"/>
+                    <TextBlock FontSize="11" Foreground="{DynamicResource Brush.FG2}" Text="{Binding Detail}"/>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+
+              <!-- Level 2: write proposal card with review loop (T-s0-4/T-s0-5, decision 3) -->
+              <DataTemplate DataType="ai:AIAgentProposeChangeMessage">
+                <Border Margin="0,0,0,4"
+                        Padding="8,4"
+                        CornerRadius="4"
+                        BorderThickness="1"
+                        BorderBrush="DarkOrange">
+                  <StackPanel Orientation="Vertical" Spacing="4">
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+                      <TextBlock Grid.Column="0" Text="✏️"/>
+                      <TextBlock Grid.Column="1"
+                                 Margin="8,0,0,0"
+                                 FontFamily="{DynamicResource Fonts.Monospace}"
+                                 FontSize="11"
+                                 Text="{Binding File}"/>
+                      <TextBlock Grid.Column="2"
+                                 Margin="8,0,0,0"
+                                 FontFamily="{DynamicResource Fonts.Monospace}"
+                                 FontSize="11"
+                                 Foreground="MediumSeaGreen"
+                                 Text="{Binding LinesAdded, StringFormat=' +{0}'}"/>
+                      <TextBlock Grid.Column="3"
+                                 FontFamily="{DynamicResource Fonts.Monospace}"
+                                 FontSize="11"
+                                 Foreground="IndianRed"
+                                 Text="{Binding LinesDeleted, StringFormat=' −{0}'}"/>
+
+                      <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsPending}">
+                        <Button Classes="flat" FontSize="11" Padding="8,2" Click="OnViewProposeDiff">查看 Diff</Button>
+                        <Button Classes="flat" FontSize="11" Padding="8,2"
+                                Command="{Binding $parent[ItemsControl].DataContext.ApproveChangeCommand}"
+                                CommandParameter="{Binding}">Approve</Button>
+                        <Button Classes="flat" FontSize="11" Padding="8,2"
+                                Command="{Binding $parent[ItemsControl].DataContext.RejectChangeCommand}"
+                                CommandParameter="{Binding}">Reject</Button>
+                      </StackPanel>
+                    </Grid>
+
+                    <TextBlock FontSize="11"
+                               Foreground="{DynamicResource Brush.FG2}"
+                               IsVisible="{Binding IsPending}"
+                               Text="该修改尚未写入工作区,批准后进入未暂存列表"/>
+
+                    <TextBlock FontSize="11"
+                               Foreground="MediumSeaGreen"
+                               IsVisible="{Binding IsApproved}"
+                               Text="✓ 已应用 — 进入未暂存列表,可正常暂存/提交/丢弃"/>
+
+                    <TextBlock FontSize="11"
+                               Foreground="IndianRed"
+                               IsVisible="{Binding IsRejected}"
+                               Text="✗ 已拒绝 — 未写入任何内容"/>
                   </StackPanel>
                 </Border>
               </DataTemplate>
 
               <DataTemplate DataType="ai:AIAgentCommandMessage">
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Spacing="6">
-                  <TextBlock Text="🛠"/>
-                  <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Foreground="{DynamicResource Brush.FG1}" Text="{Binding CommandLine}"/>
-                </StackPanel>
+                <Border Margin="0,0,0,4"
+                        Padding="8,4"
+                        CornerRadius="4"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource Brush.Border2}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="🛠"/>
+                    <TextBlock FontFamily="{DynamicResource Fonts.Monospace}" FontSize="11" Foreground="{DynamicResource Brush.FG1}" Text="{Binding CommandLine}"/>
+                  </StackPanel>
+                </Border>
               </DataTemplate>
 
               <DataTemplate DataType="ai:AIAgentCommandResultMessage">
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Spacing="6">
-                  <TextBlock Text="✅"/>
-                  <TextBlock FontSize="11" Foreground="{DynamicResource Brush.FG2}" Text="{Binding Text}"/>
-                </StackPanel>
+                <Border Margin="0,0,0,4"
+                        Padding="8,4"
+                        CornerRadius="4"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource Brush.Border2}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="✅"/>
+                    <TextBlock FontSize="11" Foreground="{DynamicResource Brush.FG2}" Text="{Binding Text}"/>
+                  </StackPanel>
+                </Border>
               </DataTemplate>
 
+              <!-- Level 3: final answer -->
               <DataTemplate DataType="ai:AIAgentAnswerMessage">
                 <StackPanel Margin="0,0,0,6" Spacing="2">
                   <TextBlock FontSize="11" Foreground="{DynamicResource Brush.Accent}" Text="🤖 Assistant"/>

@@ -98,10 +98,7 @@ namespace SourceGit.ViewModels
             get => _stashesPage;
         }
 
-        public AIChatPanel AIChat
-        {
-            get;
-        } = new();
+        public AIChatPanel AIChat => _aiChat ??= new AIChatPanel(FullPath);
 
         public bool IsHistoriesVisible
         {
@@ -1941,6 +1938,7 @@ namespace SourceGit.ViewModels
         private Histories _histories = null;
         private WorkingCopy _workingCopy = null;
         private StashesPage _stashesPage = null;
+        private AIChatPanel _aiChat = null;
         private int _selectedViewIndex = 0;
 
         private int _localBranchesCount = 0;

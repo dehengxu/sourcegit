@@ -1,11 +1,14 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace SourceGit.AI
 {
     /// <summary>
     /// Base type of messages emitted by an agent session. Distinct concrete types so
     /// views can pick a DataTemplate per message kind (M1 renders them as simple lines;
-    /// M2 upgrades to interactive cards per docs/plan/ai-phase0.md).
+    /// M2 upgrades to interactive cards per docs/plan/ai-phase0.md). Observable so
+    /// stateful messages (write proposals) can drive card UI.
     /// </summary>
-    public abstract class AIAgentMessage
+    public abstract class AIAgentMessage : ObservableObject
     {
     }
 
@@ -57,9 +60,39 @@ namespace SourceGit.AI
         } = string.Empty;
     }
 
-    public sealed class AIAgentProposeChangeMessage : AIAgentMessage
+    public enum AIAgentProposeStatus
     {
+        Pending,
+        Approved,
+        Rejected,
+    }
+
+    /// <summary>
+    /// Write proposal. Never applied silently: the user must Approve on the card
+    /// (decision 3). In Phase 0 the mock approves a one-line insertion at the top of
+    /// a real repo file so the change genuinely lands in the unstaged list.
+    /// </summary>
+    public partial class AIAgentProposeChangeMessage : AIAgentMessage
+    {
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsPending))]
+        [NotifyPropertyChangedFor(nameof(IsDecided))]
+        [NotifyPropertyChangedFor(nameof(IsApproved))]
+        [NotifyPropertyChangedFor(nameof(IsRejected))]
+        private AIAgentProposeStatus _status = AIAgentProposeStatus.Pending;
+
+        public bool IsPending => Status == AIAgentProposeStatus.Pending;
+        public bool IsDecided => Status != AIAgentProposeStatus.Pending;
+        public bool IsApproved => Status == AIAgentProposeStatus.Approved;
+        public bool IsRejected => Status == AIAgentProposeStatus.Rejected;
+
         public string File
+        {
+            get;
+            init;
+        } = string.Empty;
+
+        public string NewLine
         {
             get;
             init;

@@ -67,14 +67,20 @@ namespace SourceGit.AI
                 (900, new AIAgentSearchMessage() { Pattern = "CompleteChatAsync", Detail = "4 matches" }),
                 (800, new AIAgentReasoningMessage()
                 {
-                    Text = "改动点集中在两处:构造函数需要持有会话对象;生成方法需要换成流式接口并尊重取消令牌。生成一个最小改动补丁。",
+                    Text = "改动点集中在两处:构造函数需要持有会话对象;生成方法需要换成流式接口并尊重取消令牌。先在 README 顶部加一行说明作为演示改动,等待用户在卡片上审查。",
                 }),
-                (900, new AIAgentProposeChangeMessage() { File = "src/AI/Agent.cs", LinesAdded = 12, LinesDeleted = 2 }),
+                (900, new AIAgentProposeChangeMessage()
+                {
+                    File = "README.md",
+                    LinesAdded = 1,
+                    LinesDeleted = 0,
+                    NewLine = "# 🤖 AI 助手演示修改(在聊天面板中批准;可随时在 Working Copy 中丢弃)",
+                }),
                 (900, new AIAgentCommandMessage() { CommandLine = "dotnet build src/SourceGit.csproj -c Debug" }),
                 (1200, new AIAgentCommandResultMessage() { Text = "Build succeeded. 0 Warning(s) · 4.2s" }),
                 (600, new AIAgentAnswerMessage()
                 {
-                    Text = "已完成对 src/AI/Agent.cs 的改造提议:引入 ConversationSession 承载多轮状态,生成路径切换为流式并接入取消令牌。(Mock 消息,来自硬编码脚本,无 LLM 调用)",
+                    Text = "已提交一个修改提议(README.md 顶部插入一行说明),请在上方卡片中审查:查看 Diff 后 Approve 或 Reject。批准后改动会真实进入未暂存列表,可正常暂存/提交/丢弃。(Mock 消息,无 LLM 调用)",
                 }),
                 (400, new AIAgentNoteMessage() { Text = "— Mock 会话结束(演示)" }),
             ];
