@@ -267,16 +267,12 @@ namespace SourceGit.Views
                             repo.SelectedViewIndex = 2;
                             e.Handled = true;
                             return;
-                        case Key.F when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
-                            repo.IsSearchingCommits = true;
-                            e.Handled = true;
-                            return;
-                        case Key.H when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
-                            repo.IsSearchingCommits = false;
-                            e.Handled = true;
-                            return;
                         case Key.P when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
                             vm.CommandPalette = new ViewModels.RepositoryCommandPalette(repo);
+                            e.Handled = true;
+                            return;
+                        case Key.F when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
+                            repo.Histories.IsSearchingCommits = true;
                             e.Handled = true;
                             return;
                         case Key.B when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
@@ -320,6 +316,19 @@ namespace SourceGit.Views
             }
 
             base.OnKeyDown(e);
+        }
+
+        protected override void OnPointerPressed(PointerPressedEventArgs e)
+        {
+            base.OnPointerPressed(e);
+
+            if (!e.Handled)
+            {
+                if (e.Properties.PointerUpdateKind == PointerUpdateKind.XButton1Pressed)
+                    (DataContext as ViewModels.Launcher)?.GotoPrevTab();
+                else if (e.Properties.PointerUpdateKind == PointerUpdateKind.XButton2Pressed)
+                    (DataContext as ViewModels.Launcher)?.GotoNextTab();
+            }
         }
 
         protected override void OnClosing(WindowClosingEventArgs e)

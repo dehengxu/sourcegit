@@ -11,7 +11,7 @@ namespace SourceGit.Models
         // (FileShare.None 持有,如果能拿到锁 = 没别人在跑)
         public static bool IsAnotherInstanceRunning()
         {
-            var lockPath = Path.Combine(Native.OS.DataDir, "process.lock");
+            var lockPath = Path.Combine(Native.OS.BasicDirectories.CacheDir, "process.lock");
             try
             {
                 using var probe = File.Open(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
