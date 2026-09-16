@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:m="using:SourceGit.Models"
              xmlns:vm="using:SourceGit.ViewModels"
-             xmlns:v="using:SourceGit.Views"
+             xmlns:v="clr-namespace:SourceGit.Views;assembly=SourceGit"
              xmlns:c="using:SourceGit.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SourceGit.Views.Histories"

@@ -5,7 +5,7 @@
                     xmlns:m="using:SourceGit.Models"
                     xmlns:vm="using:SourceGit.ViewModels"
                     xmlns:c="using:SourceGit.Converters"
-                    xmlns:v="using:SourceGit.Views"
+                    xmlns:v="clr-namespace:SourceGit.Views;assembly=SourceGit"
                     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                     x:Class="SourceGit.Views.InteractiveRebase"
                     x:DataType="vm:InteractiveRebase"
